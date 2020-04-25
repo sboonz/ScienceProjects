@@ -9,7 +9,7 @@ import numpy as np
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 
-
+# the following are collected from [1]
 DEATH_TIME = 17.8
 DEATH_TIME_RANGE = [16.9, 19.2]
 RECOVERY_TIME = 24.7
