@@ -1,8 +1,19 @@
+"""
+[1] Estimates of the severity of coronavirus disease 2019: a model-based
+analysis, the Lancet, R. Verity, L.C. Okell, I. Dorigatti, P. Winskill,
+C. Whittaker, N. Imai, et al, published 30th March 2020, available at:
+https://www.thelancet.com/journals/laninf/article/PIIS1473-3099(20)30243-7/fulltext
+"""
+
 import numpy as np
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 
 
+DEATH_TIME = 17.8
+DEATH_TIME_RANGE = [16.9, 19.2]
+RECOVERY_TIME = 24.7
+RECOVERY_TIME_RANGE = [22.9, 28.1]
 CONTAGIOUSNESS = 0.01
 P_SYMPTOM = 0.03
 P_RECOVERY = 0.05
