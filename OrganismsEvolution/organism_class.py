@@ -31,14 +31,20 @@ class Organism:
         self.genetic_sequence = genetic_sequence
 
     def reproduce(self, other_parent):
-        offspring_gene = ""
-        for gene_a, gene_b in zip(
-            self.genetic_sequence,
-            other_parent.genetic_sequence
-        ):
+        def gene_allocation(gene1, gene2):
             random_number = np.random.random()
             if random_number < MUTATION_PROBABILITY:
                 return np.random.choice(GENE_TYPES)
             else:
-                return np.random.choice(a, b)
+                return np.random.choice(gene1, gene2)
+        offspring_genes = "".join(
+            [
+                gene_allocation(gene1, gene2)
+                for gene1, gene2 in zip(
+                    self.genetic_sequence,
+                    other_parent.genetic_sequence
+                )
+            ]
+        )
+        return Organism(self.position, offspring_genes)
 
