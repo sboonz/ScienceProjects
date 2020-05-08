@@ -12,7 +12,7 @@ TEMPERATURE_PREFACTOR = 0.0000167   # defined as e^2 / 4 pi epsilon k_B
 MASS_FACTOR = 0.01097               # defined as sqrt(m_u / k_B)
 CHARACTERISTIC_TEMPERATURE = TEMPERATURE_PREFACTOR / FLUID_ELEMENT_SIZE
 ROOM_TEMPERATURE = 298
-TIME_STEPS = 10
+TIME_STEPS = 100
 
 
 def get_time_step(temperature, molecular_mass, degrees_of_freedom):
@@ -81,7 +81,7 @@ class Medium:
         def move_cell(x, y):
             def move_particle(x, y, q1):
                 def get_boltzmann_factor(new_x, new_y):
-                    if new_x not in [-1, w] and new_y not in [-1, h]:
+                    if new_x not in [-1, w] or new_y not in [-1, h]:
                         q2 = self_field[new_x, new_y].total_charge()
                         return np.exp(
                             -(CHARACTERISTIC_TEMPERATURE * q1 * q2) /
