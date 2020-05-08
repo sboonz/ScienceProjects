@@ -1,9 +1,9 @@
 import numpy as np
 from PIL import Image
-import time
 
 IMAGE_MAXIMUM_INTENSITY = 255
 ROOM_TEMPERATURE = 1
+TIME_STEPS = 50
 
 
 def get_total(field):
@@ -45,25 +45,28 @@ class Medium:
 
     def update_charge_distribution(self, temperature=ROOM_TEMPERATURE):
         self_field = self.particle_field
-        width, height = self_field.shape
+        w, h = self_field.shape
         mesh_x, mesh_y = np.meshgrid(
-            np.arange(0, width, 1),
-            np.arange(0, height, 1)
+            np.arange(0, w, 1),
+            np.arange(0, h, 1)
         )
         vectorized_charge_stack = np.vectorize(ChargeStack)
-        template = vectorized_charge_stack(np.zeros((width, height)))
+        template = vectorized_charge_stack(np.zeros((w, h)))
 
         def move_particle(x, y, charge):
             new_x = x + np.random.choice([-1, 1])
             new_y = y + np.random.choice([-1, 1])
-            if new_x not in [-1, width] and new_y not in [-1, height]:
+            if new_x not in [-1, w] and new_y not in [-1, h]:
                 energy = self_field[new_x, new_y].total_charge() * charge
                 boltzmann_factor = np.exp(- energy / temperature)
                 # similar implementation to the Metropolis-Hastings Algorithm
                 random_number = np.random.random()
                 if boltzmann_factor > 1 or random_number > boltzmann_factor:
                     template[new_x, new_y].add_charge(charge)
-            template[x, y].add_charge(charge)
+                else:
+                    template[x, y].add_charge(charge)
+            else:
+                template[x, y].add_charge(charge)
 
         def move_cell(x, y):
             stack_array = np.array(self_field[x, y].charges.copy())
@@ -87,16 +90,41 @@ class Medium:
         vectorized_get_total_charge = np.vectorize(get_total_charge)
         return vectorized_get_total_charge(self.particle_field)
 
+    def show(
+        self,
+        normalization_factor=1,
+        image_rescaling_factor=1,
+        mode="population"
+    ):
+        if mode == "population":
+            population_field = self.get_population_field()
+            w, h = image_rescaling_factor * np.array(population_field.shape)
+            Image.fromarray(
+                normalization_factor * population_field.transpose() - 1
+            ).resize((w, h)).show()
+        elif mode == "charge":
+            charge_field = self.get_charge_field()
+            w, h = image_rescaling_factor * np.array(charge_field.shape)
+            Image.fromarray(
+                normalization_factor * charge_field.transpose() - 1
+            ).resize((w, h)).show()
+        else:
+            raise Exception(f"{mode} is not a valid mode!")
+
 
 if __name__ == "__main__":
     # population = np.random.randint(0, 50, 10000).reshape((100, 100))
-    population = np.zeros((100, 100))
-    population[10: 20, 10: 20] = 50
+    width, height = 100, 100
+    resized_width, resized_height = 200, 200
+    population = np.zeros((width, height))
+    top, bottom, left, right = 10, 20, 10, 20
+    concentration = 20
+    intensity_factor = 10
+    population[top: bottom, left: right] = concentration
     population.astype("int32")
-    print(population)
-    time_steps = 50
     medium = Medium(population)
-    Image.fromarray(medium.get_population_field()).show()
-    for _ in range(time_steps):
+    medium.show(10, 10)
+    for _ in range(TIME_STEPS):
         medium.update_charge_distribution()
-    Image.fromarray(medium.get_population_field()).show()
+        if not _ % 10:
+            medium.show(10, 10)
