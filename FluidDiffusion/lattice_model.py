@@ -6,19 +6,31 @@ IMAGE_MAXIMUM_INTENSITY = 255
 ROOM_TEMPERATURE = 1
 
 
+def get_total(field):
+    def get_total_charge(cell):
+        return cell.population
+
+    vectorized_get_total_charge = np.vectorize(get_total_charge)
+    return vectorized_get_total_charge(field)
+
+
 class ChargeStack:
     def __init__(self, occupancy):
         if occupancy > 0:
             self.charges = list(
-                np.random.choice([-1, -1], occupancy)
+                np.random.choice([1, -1], int(occupancy))
             )
         else:
             self.charges = []
-        self.total_charge = sum(self.charges)
-        self.population = len(self.charges)
 
     def add_charge(self, charge):
         self.charges.append(charge)
+
+    def total_charge(self):
+        return sum(self.charges)
+
+    def population(self):
+        return len(self.charges)
 
 
 class Medium:
@@ -45,7 +57,7 @@ class Medium:
             new_x = x + np.random.choice([-1, 1])
             new_y = y + np.random.choice([-1, 1])
             if new_x not in [-1, width] and new_y not in [-1, height]:
-                energy = self_field[new_x, new_y].total_charge * charge
+                energy = self_field[new_x, new_y].total_charge() * charge
                 boltzmann_factor = np.exp(- energy / temperature)
                 # similar implementation to the Metropolis-Hastings Algorithm
                 random_number = np.random.random()
@@ -65,20 +77,26 @@ class Medium:
 
     def get_charge_field(self):
         def get_total_charge(cell):
-            return cell.total_charge
+            return cell.total_charge()
         vectorized_get_total_charge = np.vectorize(get_total_charge)
         return vectorized_get_total_charge(self.particle_field)
 
     def get_population_field(self):
         def get_total_charge(cell):
-            return cell.population
+            return cell.population()
         vectorized_get_total_charge = np.vectorize(get_total_charge)
         return vectorized_get_total_charge(self.particle_field)
 
 
 if __name__ == "__main__":
-    population = np.random.randint(0, 120, 1600).reshape((40, 40))
+    # population = np.random.randint(0, 50, 10000).reshape((100, 100))
+    population = np.zeros((100, 100))
+    population[10: 20, 10: 20] = 50
+    population.astype("int32")
+    print(population)
+    time_steps = 50
     medium = Medium(population)
     Image.fromarray(medium.get_population_field()).show()
-    medium.update_charge_distribution()
+    for _ in range(time_steps):
+        medium.update_charge_distribution()
     Image.fromarray(medium.get_population_field()).show()
